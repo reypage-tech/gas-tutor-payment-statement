@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<style>
+  body { font-family: sans-serif; font-size: 13px; padding: 8px; }
+  h2 { font-size: 14px; margin: 4px 0 8px; }
+  select, button { width: 100%; padding: 6px; margin-bottom: 6px; box-sizing: border-box; }
+  button { cursor: pointer; }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .bar-outer { background: #eee; border-radius: 4px; height: 10px; margin: 6px 0 10px; overflow: hidden; }
+  .bar-inner { background: #4a7; height: 100%; width: 0%; transition: width .2s; }
+  .count { font-size: 12px; color: #444; margin: 2px 0; }
+  .error { color: #c33; }
+  .warn { color: #b80; }
+  .msg { font-size: 12px; margin-top: 8px; white-space: pre-wrap; }
+  .badge { display:inline-block; padding:2px 6px; border-radius:3px; font-size:11px; background:#eee; }
+</style>
+</head>
+<body>
+  <h2>月次処理</h2>
+  <label>対象月</label>
+  <select id="monthSelect"></select>
+
+  <div class="bar-outer"><div class="bar-inner" id="bar"></div></div>
+  <div class="count" id="statusLabel">状態: -</div>
+  <div class="count error" id="errorCount"></div>
+  <div class="count warn" id="warningCount"></div>
+  <div class="count warn" id="redraftWarn" style="display:none">※再計算により金額が変わりました。④下書き作成をやり直してください。</div>
+
+  <button id="btnCheck">①チェック</button>
+  <button id="btnCalc">②計算</button>
+  <button id="btnPdf">③PDF作成</button>
+  <button id="btnDraft">④下書き作成</button>
+  <button id="btnFinalize">⑤確定（管理者のみ）</button>
+
+  <div class="msg" id="message"></div>
+
+<script>
+var STEPS = ['CHECK', 'CALC', 'PDF', 'DRAFT', 'FINALIZE'];
+var BTN_ID = { CHECK: 'btnCheck', CALC: 'btnCalc', PDF: 'btnPdf', DRAFT: 'btnDraft', FINALIZE: 'btnFinalize' };
+
+function render(sidebar) {
+  var monthSelect = document.getElementById('monthSelect');
+  if (monthSelect.options.length === 0 || monthSelect.dataset.loaded !== '1') {
+    monthSelect.innerHTML = '';
+    sidebar.availableMonths.forEach(function (m) {
+      var opt = document.createElement('option');
+      opt.value = m;
+      opt.textContent = m;
+      if (m === sidebar.month) opt.selected = true;
+      monthSelect.appendChild(opt);
+    });
+    monthSelect.dataset.loaded = '1';
+  }
+
+  var state = sidebar.state;
+  var stepOrder = { NONE: 0, CHECKED_NG: 1, CHECKED_OK: 1, CALCULATED: 2, PDF_DONE: 3, DRAFTED: 4, FINALIZED: 5 };
+  var progress = (stepOrder[state.step] || 0) / 5 * 100;
+  document.getElementById('bar').style.width = progress + '%';
+  document.getElementById('statusLabel').textContent = '状態: ' + state.step + (sidebar.isFinalized ? '（確定済み）' : '');
+  document.getElementById('errorCount').textContent = 'エラー: ' + state.errorCount + '件';
+  document.getElementById('warningCount').textContent = '注意: ' + state.warningCount + '件';
+  document.getElementById('redraftWarn').style.display = state.needsRedraft ? 'block' : 'none';
+
+  STEPS.forEach(function (step) {
+    var btn = document.getElementById(BTN_ID[step]);
+    var enabled = sidebar.availability[step];
+    if (step === 'FINALIZE' && !sidebar.isAdmin) enabled = false;
+    btn.disabled = !enabled;
+  });
+}
+
+function refresh() {
+  var month = document.getElementById('monthSelect').value || null;
+  google.script.run.withSuccessHandler(render).sidebarGetState(month);
+}
+
+function runStep(step) {
+  document.getElementById('message').textContent = '実行中…';
+  STEPS.forEach(function (s) { document.getElementById(BTN_ID[s]).disabled = true; });
+  var month = document.getElementById('monthSelect').value || null;
+  google.script.run.withSuccessHandler(function (result) {
+    document.getElementById('message').textContent = result.ok ? '完了しました。' : ('エラー: ' + result.message);
+    render(result.sidebar);
+  }).sidebarRunStep(step, month);
+}
+
+document.getElementById('btnCheck').onclick = function () { runStep('CHECK'); };
+document.getElementById('btnCalc').onclick = function () { runStep('CALC'); };
+document.getElementById('btnPdf').onclick = function () { runStep('PDF'); };
+document.getElementById('btnDraft').onclick = function () { runStep('DRAFT'); };
+document.getElementById('btnFinalize').onclick = function () { runStep('FINALIZE'); };
+document.getElementById('monthSelect').onchange = refresh;
+
+google.script.run.withSuccessHandler(render).sidebarGetState(null);
+</script>
+</body>
+</html>
