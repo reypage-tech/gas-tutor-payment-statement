@@ -56,7 +56,6 @@ SETUP_GUIDE.md の「1. 初期設定」を参照してください。data/ に�
 
 ## 作った人
 Reypage｜GAS業務自動化
-https://reypage.pages.dev/automation/
 
 ## ライセンス
 MIT（LICENSE を参照）
