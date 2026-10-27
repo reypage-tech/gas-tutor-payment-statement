@@ -29,11 +29,16 @@ function roundAmount_(amount, method) {
   return Math.round(amount);
 }
 
+/** 日付を読むタイムゾーン。スクリプトの設定（appsscript.json の timeZone）にそろえる */
+function tz_() {
+  return Session.getScriptTimeZone() || 'Asia/Tokyo';
+}
+
 /** 'yyyy-MM' / 'yyyyMM' のどちらでも 'yyyyMM' に正規化する。
  * スプレッドシート側で日付として自動変換された場合（Dateオブジェクトになっている場合）も扱う。 */
 function normalizeMonth_(monthValue) {
   if (monthValue instanceof Date) {
-    return Utilities.formatDate(monthValue, 'Asia/Tokyo', 'yyyyMM');
+    return Utilities.formatDate(monthValue, tz_(), 'yyyyMM');
   }
   var digits = String(monthValue || '').replace(/[^\d]/g, '');
   if (digits.length !== 6) throw new Error('対象年月の形式が不正です: ' + monthValue);
@@ -56,13 +61,13 @@ function previousMonth_(yyyyMM) {
   return y + ('' + m).padStart(2, '0');
 }
 
-/** 今日の日付文字列（設定のタイムゾーン基準） */
+/** 今日の日付文字列（スクリプトのタイムゾーン基準） */
 function todayStr_() {
-  return Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy-MM-dd');
+  return Utilities.formatDate(new Date(), tz_(), 'yyyy-MM-dd');
 }
 
 function nowStr_() {
-  return Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy-MM-dd HH:mm:ss');
+  return Utilities.formatDate(new Date(), tz_(), 'yyyy-MM-dd HH:mm:ss');
 }
 
 /** 現在時刻(ms)。6分制限の判定に使う。test/run.jsではこの関数だけを差し替えて、

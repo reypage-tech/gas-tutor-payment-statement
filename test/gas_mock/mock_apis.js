@@ -463,15 +463,18 @@ function pad2_(n) { return (n < 10 ? '0' : '') + n; }
 function buildUtilities() {
   return {
     formatDate: function (date, tz, format) {
-      var y = date.getFullYear(), mo = pad2_(date.getMonth() + 1), d = pad2_(date.getDate());
-      var h = pad2_(date.getHours()), mi = pad2_(date.getMinutes()), s = pad2_(date.getSeconds());
+      // 実物と同じく、指定のタイムゾーンで年月日・時刻を出す
+      var parts = {};
+      new Intl.DateTimeFormat('en-US', { timeZone: tz, hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit' }).formatToParts(date)
+        .forEach(function (x) { parts[x.type] = x.value; });
       return format
-        .replace('yyyy', y)
-        .replace('MM', mo)
-        .replace('dd', d)
-        .replace('HH', h)
-        .replace('mm', mi)
-        .replace('ss', s);
+        .replace('yyyy', parts.year)
+        .replace('MM', parts.month)
+        .replace('dd', parts.day)
+        .replace('HH', parts.hour)
+        .replace('mm', parts.minute)
+        .replace('ss', parts.second);
     },
     newBlob: function (bytes, contentType, name) { return makeBlob(bytes, contentType, name); },
     base64Encode: function (data) {
@@ -511,6 +514,7 @@ function buildHtmlService() {
 
 function buildSession(world) {
   return {
+    getScriptTimeZone: function () { return world.scriptTimeZone || 'Asia/Tokyo'; },
     getEffectiveUser: function () {
       return { getEmail: function () { return world.currentUserEmail; } };
     }

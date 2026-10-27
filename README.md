@@ -45,6 +45,7 @@ SETUP_GUIDE.md の「1. 初期設定」を参照してください。data/ に�
 | test/ | Node.js で動くテスト |
 
 ## 作りの工夫
+- 日付：対象年月や今日の日付は、スクリプトのタイムゾーン（appsscript.json の timeZone。見本では Asia/Tokyo）で読みます。海外の会社で使うときは、この設定を会社の地域に変えてください。
 - テスト：`node test/run.js`（test/gas_mock の偽物の上で、正常・異常・大量件数・二重処理・6分制限からの再開・送信系が呼ばれないことを確かめる。実際の Apps Script では動かしていません）
 - 6分制限からの再開：Batch.gs の runBatchOverInstructors_ が講師1人ずつ処理し、Config.gs の BATCH_TIME_LIMIT_MS（4.5分）を超えたら進み具合を State.gs の saveBatchProgress_ に残し、scheduleContinuation_ でトリガーを作って resumeBatch から続きを動かす
 - 二重処理の防ぎ方：State.gs の getIdempotencyMap_／saveIdempotencyMap_ で、作ったPDF（Pdf.gs）と下書き（Draft.gs）を月ごとに記録し、二度作らない。確定した月は isMonthFinalized_ で止める

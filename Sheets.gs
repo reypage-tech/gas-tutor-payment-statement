@@ -194,7 +194,7 @@ function backupSpreadsheet_(label, yyyyMM) {
   var created = [];
   try {
     var ss = getActiveSs_();
-    var stamp = Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyyMMdd_HHmmss');
+    var stamp = Utilities.formatDate(new Date(), tz_(), 'yyyyMMdd_HHmmss');
     var targets = [SHEET_PREFIX_CALC + yyyyMM, SHEET_PREFIX_DETAIL + yyyyMM, SHEET_SUMMARY];
     targets.forEach(function (name) {
       var src = ss.getSheetByName(name);

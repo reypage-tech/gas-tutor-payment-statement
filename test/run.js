@@ -653,6 +653,27 @@ function countByColumn_(sheet, colIndex) {
   assert('T21: 失敗はエラーログに記録される', !!logged);
 })();
 
+// =====================================================================
+// T22: 日付はスクリプトのタイムゾーンで読む（東京以外でも年月・日がずれない）
+// =====================================================================
+(function T22_scriptTimeZone() {
+  var loaded = loadContext();
+  var c = loaded.context;
+  // シート側の日付と同じく、GASの中の Date で作る
+  function d(ms) { return vm.runInContext('new Date(' + ms + ')', c); }
+  // 2026-09-01 00:00 JST は、UTCでは 2026-08-31 15:00、ニューヨークでは 2026-08-31 11:00
+  var jstMidnight = d(Date.UTC(2026, 7, 31, 15, 0, 0));
+  loaded.world.scriptTimeZone = 'Asia/Tokyo';
+  assert('T22: 東京のスクリプトでは、日本時間0時の日付が9月として読まれる', c.normalizeMonth_(jstMidnight) === '202609', c.normalizeMonth_(jstMidnight));
+  assert('T22: 東京のスクリプトでは、tz_() が Asia/Tokyo を返す', c.tz_() === 'Asia/Tokyo');
+  // ニューヨークの会社がシートに 2026-09-01 と入れた値（現地0時）
+  var nyMidnight = d(Date.UTC(2026, 8, 1, 4, 0, 0));
+  loaded.world.scriptTimeZone = 'America/New_York';
+  assert('T22: ニューヨークのスクリプトでは、現地0時の日付が9月のまま読まれる', c.normalizeMonth_(nyMidnight) === '202609', c.normalizeMonth_(nyMidnight));
+  assert('T22: ニューヨークのスクリプトでは、月末の現地23時が翌月にずれない', c.normalizeMonth_(d(Date.UTC(2026, 9, 1, 3, 0, 0))) === '202609');
+  assert('T22: todayStr_ が yyyy-MM-dd の形で返る', /^\d{4}-\d{2}-\d{2}$/.test(c.todayStr_()), c.todayStr_());
+})();
+
 console.log('');
 var okCount = results.filter(function (r) { return r.ok; }).length;
 var ngCount = results.length - okCount;
