@@ -1,5 +1,15 @@
 # gas-tutor-payment-statement
 
+## In English
+
+A Google Apps Script sample that goes from monthly pay calculation to a PDF statement and a Gmail draft for each tutor. All data is fictional (a sample school with 20 tutors).
+It reads the records, tutor and item sheets without changing them, then runs five steps in order from a menu and sidebar: check, calculate, create PDFs, create Gmail drafts, finalize.
+Drafts are only created. A person sends them. Finalizing protects the sheets and writes an audit log. Errors go to an error log sheet.
+How to try it:
+1. Follow section 1 of `SETUP_GUIDE.md` (written in Japanese). Fictional sample CSV data is in `data/`.
+2. Local tests with mocked Google services: `node test/run.js`. Not yet run in a real Apps Script project.
+For setup, monthly steps and troubleshooting, see SETUP_GUIDE.md.
+
 月次の報酬計算から、講師別のPDF明細と Gmail の下書きまでを自動で作る Google Apps Script の見本です。
 架空の教室「サンプル学習塾」、架空の講師20名、架空のデータだけで動きます。
 
