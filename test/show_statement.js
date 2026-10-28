@@ -1,9 +1,9 @@
 // node test/show_statement.js : 架空の2026年9月分の実績で、チェック・計算・PDF・下書きをモック上で通し、結果を表示する。
-// 実行日時は 2026-10-01 10:00（日本時間）に固定した想定。実際の Apps Script・Gmail・ドライブでは実行していない（README の画像はこの出力）。
+// 実行日時は 2026-09-01 10:00（日本時間）に固定した想定。実際の Apps Script・Gmail・ドライブでは実行していない（README の画像はこの出力）。
 var fs = require('fs'), path = require('path'), vm = require('vm');
 var mockApis = require('./gas_mock/mock_apis.js');
 var ROOT = path.join(__dirname, '..');
-var FIXED = Date.UTC(2026, 9, 1, 1, 0, 0); // 2026-10-01 10:00 JST
+var FIXED = Date.UTC(2026, 8, 1, 1, 0, 0); // 2026-09-01 10:00 JST
 var RealDate = Date;
 function FixedDate() { var a = [].slice.call(arguments); return a.length ? new (Function.prototype.bind.apply(RealDate, [null].concat(a)))() : new RealDate(FIXED); }
 FixedDate.prototype = RealDate.prototype; FixedDate.now = function () { return FIXED; }; FixedDate.UTC = RealDate.UTC; FixedDate.parse = RealDate.parse;
@@ -27,7 +27,8 @@ var ck = c.runCheck(); c.runCalculate(); c.runPdf(); c.runDraft();
 console.log('対象 2026-08：チェックのエラー ' + ck.errorCount + '件。続けて計算・PDF・下書きを実行');
 var calc = ss.getSheetByName('計算結果_202608').__dumpRows();
 console.log('\n■ 計算結果_202608（先頭5名／全' + (calc.length - 1) + '名）');
-calc.slice(0, 6).forEach(function (r) { console.log(r.slice(0, 7).join(' | ')); });
+function yen(v) { return Number(v).toLocaleString('ja-JP') + '円'; }
+calc.slice(0, 6).forEach(function (r, i) { console.log(r.slice(0, 7).map(function (v, j) { return i && j >= 4 ? yen(v) : v; }).join(' | ')); });
 var pdfs = Object.keys(built.world.files).filter(function (k) { return built.world.files[k].mimeType === 'application/pdf'; }).length;
 console.log('\nPDF ' + pdfs + '件・Gmail 下書き ' + Object.keys(built.world.drafts).length + '件');
 console.log('\n■ エラーログ');
